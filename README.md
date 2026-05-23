@@ -1,7 +1,6 @@
 # FDGB-Sim
 Formate-Driven Glycine Biosynthesis Simulator
 
-!https://img.shields.io/badge/iGEM-2026-yellowgreen.svg !https://img.shields.io/badge/License-MIT-blue.svg  
 
 # 项目简介
 
@@ -37,25 +36,23 @@ Formate-Driven Glycine Biosynthesis Simulator
 
 ## 1. FtfL（三元不可逆反应）
 
-
+![FtfL 反应](./eq1.svg)
 
 ## 2. Fch（不可逆）
 
-
+![Fch 反应](./eq2.svg)
 
 ## 3. MtdA（不可逆）
 
-
+![Mtda 反应](./eq3.svg)
 
 ## 4. GCS（主正向+弱逆向+产物抑制）
 
-$$
-v_4 = \underbrace{V_{\text{max,GCS}} \cdot \prod_{S \in \{mTHF,NH_3,HCO_3^-\}} \frac{[S]}{K_S + [S]} \cdot \frac{1}{1 + \frac{[Gly]}{K_{\text{inh}}}}}_{\text{正向速率}} - \underbrace{0.02 \cdot V_{\text{max,GCS}} \cdot \frac{[Gly]}{K_{\text{Gly,rev}} + [Gly]} \cdot \frac{[THF]}{K_{\text{THF,rev}} + [THF]}}_{\text{逆向速率}}
-$$
+![GCS 反应](./eq4.svg)
 
 ## 5. SHMT（THF依赖型可逆反应）
 
-
+![SHMT 反应](./eq5.svg)
 
 ## 其中：
 
@@ -96,22 +93,23 @@ y=[F, THF, F10, MH4F, mTHF, Gly, Ser, NH_3]
 
 ## 4.1 侧边栏参数设置
 
-模块 可调参数 默认值 物理意义
-Vmax FtfL/Fch/MtdA/GCS/SHMT 见代码DEFAULT_VMAX 最大催化速率（mM/min）
-初始浓度 Formate/THF/Gly/Ser/NH₃/HCO₃⁻/ATP/NADPH/NADH 见代码DEFAULT_INIT 初始底物池（mM）
-模拟时长 Simulation Time 120分钟 总反应时间
+| 模块 | 可调参数 | 默认值 | 物理意义 |
+|:---|:---|:---|:---|
+| Vmax | FtfL / Fch / MtdA / GCS / SHMT | `DEFAULT_VMAX` (见代码) | 最大催化速率 (mM/min) |
+| 初始浓度 | Formate / THF / Gly / Ser / NH₃ / HCO₃⁻ / ATP / NADPH / NADH | `DEFAULT_INIT` (见代码) | 初始底物池 (mM) |
+| 模拟时长 | Simulation Time | 120 分钟 | 总反应时间 |
+
 ## 4.2 主界面布局
-区域 功能 说明
-左侧主面板 🚀 Run Simulation按钮<br>📈 模拟结果图表（3子图）<br>📊 关键指标卡片 图表永久保留，不受敏感性分析干扰
-右侧侧边栏 📊 Sensitivity Analysis按钮<br>📝 敏感性分析结果（表格+条形图） 需先运行模拟，自动读取左侧结果
+| 区域 | 功能 | 说明 |
+|:---|:---|:---|
+| **左侧主面板** | 🚀 Run Simulation 按钮<br>📈 模拟结果图表（3子图）<br>📊 关键指标卡片 | 图表保留，不受敏感性分析干扰 |
+| **右侧侧边栏** | 📊 Sensitivity Analysis 按钮<br>📝 敏感性分析结果（表格+条形图） | 需先运行模拟，自动读取左侧结果 |
   
 
 ## 4.3 敏感性分析方法
 
 1. 扰动范围：各参数±10%（受生理上下限约束）；  
-2. 灵敏度指数：
-< img src="https://latex.codecogs.com/svg.image?SI=\frac{\Delta&space;Gly&space;/&space;Gly_{\text{base}}}{\Delta&space;Param&space;/&space;Param_{\text{base}}}" alt="Equation 1" />
-
+2. 灵敏度指数：<img src="https://latex.codecogs.com/svg.image?SI=\frac{\Delta&space;Gly&space;/&space;Gly_{\text{base}}}{\Delta&space;Param&space;/&space;Param_{\text{base}}}" alt="Equation 1" />
 4. 输出内容：排序表格、正负效应条形图、实验优先级建议。  
 
 # 本地部署与运行指南
@@ -140,10 +138,11 @@ streamlit run 9.py
 
 ## 5.4 常见问题排查
 
-问题现象 解决方法
-端口被占用（提示Address already in use） 换端口运行：streamlit run 9.py --server.port 8502（数字可自定义）
-依赖安装失败（如scipy编译错误） 升级pip后重试：pip install --upgrade pip，或安装预编译包（Windows推荐用conda install scipy）
-运行时提示ModuleNotFoundError 确认虚拟环境已激活，且依赖已正确安装（可重新执行pip install命令）
+| 问题现象 | 解决方法 |
+|:---|:---|
+| 端口被占用<br>（提示 Address already in use） | 换端口运行：<br>`streamlit run 9.py --server.port 8502`<br>（数字可自定义） |
+| 依赖安装失败<br>（如 scipy 编译错误） | 1. 升级 pip：`pip install --upgrade pip`<br>2. Windows 推荐使用 Conda：`conda install scipy` |
+| 运行时提示 ModuleNotFoundError | 确认虚拟环境已激活，且依赖已正确安装：<br>重新执行 `pip install -r requirements.txt` |
   
 
 # 许可证
