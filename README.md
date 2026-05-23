@@ -34,36 +34,34 @@ Formate-Driven Glycine Biosynthesis Simulator
 
 所有方程含底物耗尽截断：任意底物浓度<1e-8 mM时，速率强制归零（避免数值发散）。  
 
+
 ## 1. FtfL（三元不可逆反应）
 
-< img src="https://latex.codecogs.com/svg.image?&space;v_1=\begin{cases}\frac{V_{\text{max,FtfL}}\cdot[F]\cdot[THF]\cdot[ATP]}{K_{F}K_{THF}K_{ATP}&plus;K_{THF}K_{ATP}[F]&plus;K_{F}K_{ATP}[THF]&plus;K_{F}K_{THF}[ATP]&plus;[F][THF][ATP]},&&space;\text{if}[F],[THF],[ATP]>&space;10^{-8}\text{mM}\\&space;0,&&space;\text{otherwise}\end{cases}" alt="Equation 1" />
 
 
 ## 2. Fch（不可逆）
 
-< img src="https://latex.codecogs.com/svg.image?v_2=\begin{cases}\frac{V_{\text{max,Fch}}\cdot&space;\frac{[F10]}{K_{F10}}}{1&plus;\frac{[F10]}{K_{F10}}&plus;\frac{[MH4F]}{K_{MH4F}}},&&space;\text{if}[F10]>&space;10^{-8}\text{mM}\\&space;0,&&space;\text{otherwise}\end{cases}" alt="Equation 1" />
 
 
 ## 3. MtdA（不可逆）
 
-< img src="https://latex.codecogs.com/svg.image?v_3=\begin{cases}\frac{V_{\text{max,MtdA}}\cdot&space;\frac{[MH4F][NADPH]}{K_{MH4F}K_{NADPH}}}{1&plus;\frac{[MH4F]}{K_{MH4F}}&plus;\frac{[NADPH]}{K_{NADPH}}&plus;\frac{[mTHF]}{K_{mTHF}}&plus;\frac{[NADP]}{K_{NADP}}&plus;\frac{[MH4F][NADPH]}{K_{MH4F}K_{NADPH}}},&&space;\text{if}[MH4F]>&space;10^{-8}\text{mM}\\&space;0,&&space;\text{otherwise}\end{cases}" alt="Equation 1" />
 
 
 ## 4. GCS（主正向+弱逆向+产物抑制）
 
-< img src="https://latex.codecogs.com/svg.image?v_4=\underbrace{V_{\text{max,GCS}}\cdot&space;\prod_{S&space;\in&space;\{mTHF,NH_3,HCO_3^-\}}\frac{[S]}{K_S&plus;[S]}\cdot&space;\frac{1}{1&plus;\frac{[Gly]}{K_{\text{inh}}}}}_{\text{}}-\underbrace{0.02&space;\cdot&space;V_{\text{max,GCS}}\cdot&space;\frac{[Gly]}{K_{\text{Gly,rev}}&plus;[Gly]}\cdot&space;\frac{[THF]}{K_{\text{THF,rev}}&plus;[THF]}}_{\text{}}" alt="Equation 1" />
-
+$$
+v_4 = \underbrace{V_{\text{max,GCS}} \cdot \prod_{S \in \{mTHF,NH_3,HCO_3^-\}} \frac{[S]}{K_S + [S]} \cdot \frac{1}{1 + \frac{[Gly]}{K_{\text{inh}}}}}_{\text{正向速率}} - \underbrace{0.02 \cdot V_{\text{max,GCS}} \cdot \frac{[Gly]}{K_{\text{Gly,rev}} + [Gly]} \cdot \frac{[THF]}{K_{\text{THF,rev}} + [THF]}}_{\text{逆向速率}}
+$$
 
 ## 5. SHMT（THF依赖型可逆反应）
 
-< img src="https://latex.codecogs.com/svg.image?v_5=\begin{cases}\frac{v_{\text{fwd}}-v_{\text{rev}}}{1&plus;\frac{[Gly]}{K_{Gly}}&plus;\frac{[mTHF]}{K_{mTHF}}&plus;\frac{[Ser]}{K_{Ser}}&plus;\frac{[THF]}{K_{THF}}&plus;\frac{[Gly][mTHF]}{K_{Gly}K_{mTHF}}&plus;\frac{[Ser][THF]}{K_{Ser}K_{THF}}},&[THF]\geq&space;0.01\text{mM}\\[10pt]\frac{-v_{\text{rev}}}{1&plus;\frac{[Gly]}{K_{Gly}}&plus;\frac{[mTHF]}{K_{mTHF}}&plus;\frac{[Ser]}{K_{Ser}}&plus;\frac{[THF]}{K_{THF}}&plus;\frac{[Ser][THF]}{K_{Ser}K_{THF}}},&[THF]<&space;0.01\text{mM}\end{cases}" alt="Equation 1" />
 
 
 ## 其中：
 
-< img src="https://latex.codecogs.com/svg.image?v_{\text{fwd}}=V_{\text{max,SHMT}}\cdot&space;\frac{[Gly][mTHF]}{K_{Gly}K_{mTHF}}" alt="Equation 1" />
+<img src="https://latex.codecogs.com/svg.image?v_{\text{fwd}}=V_{\text{max,SHMT}}\cdot&space;\frac{[Gly][mTHF]}{K_{Gly}K_{mTHF}}" alt="Equation 1" />
 
-< img src="https://latex.codecogs.com/svg.image?v_{\text{rev}}=\frac{V_{\text{max,SHMT}}}{K_{\text{eq}}}\cdot&space;\frac{[Ser][THF]}{K_{Ser}K_{THF}}K_{\text{eq}}=1.2&space;&space;&space;&space;&space;" alt="Equation 1" />
+<img src="https://latex.codecogs.com/svg.image?v_{\text{rev}}=\frac{V_{\text{max,SHMT}}}{K_{\text{eq}}}\cdot&space;\frac{[Ser][THF]}{K_{Ser}K_{THF}}K_{\text{eq}}=1.2&space;&space;&space;&space;&space;" alt="Equation 1" />
 
 
 # ODE系统与数值求解
