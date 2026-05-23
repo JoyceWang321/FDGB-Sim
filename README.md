@@ -21,12 +21,13 @@ Formate-Driven Glycine Biosynthesis Simulator
 
 # 代谢模型（核心反应网络）
 
-酶代号 酶全称 反应方向 关键特征
-FtfL 甲酸-THF连接酶 不可逆：Formate + THF + ATP → 10-Formyl-THF 三元底物饱和动力学
-Fch 10-甲酰-THF环水解酶 不可逆：10-Formyl-THF → 5,10-Methenyl-THF 仅正向催化
-MtdA 5,10-亚甲基-THF脱氢酶 不可逆：5,10-Methylene-THF + NADPH → 5,10-Methenyl-THF + NADP⁺ 仅正向催化
-GCS 甘氨酸合成酶系统 正向：5,10-Methenyl-THF + NH₃ + HCO₃⁻ + NADH → Glycine + THF<br>逆向：Glycine + THF → 5,10-Methenyl-THF + NH₃ + HCO₃⁻ + NADH 甘氨酸产物抑制
-SHMT 丝氨酸羟甲基转移酶 可逆：Glycine + 5,10-Methylene-THF ⇌ Serine + THF THF依赖型双向反应
+| 酶代号 | 酶全称 | 反应方向 | 关键特征 |
+|:---|:---|:---|:---|
+| `FtfL` | 甲酸-THF连接酶 | 不可逆：<br>Formate + THF + ATP → 10-Formyl-THF | 三元底物饱和动力学 |
+| `Fch` | 10-甲酰-THF环水解酶 | 不可逆：<br>10-Formyl-THF → 5,10-Methenyl-THF | 体正向催化 |
+| `MtdA` | 5,10-亚甲基-THF脱氢酶 | 不可逆：<br>5,10-Methylene-THF + NADPH → 5,10-Methenyl-THF + NADP⁺ | 体正向催化 |
+| `GCS` | 甘氨酸合成酶系统 | 正向：5,10-Methenyl-THF + NH₃ + HCO₃⁻ + NADH → Glycine + THF<br><br>逆向：Glycine + THF → 5,10-Methenyl-THF + NH₃ + HCO₃⁻ + NADH | 甘氨酸产物抑制 |
+| `SHMT` | 丝氨酸羟甲基转移酶 | 可逆：<br>Glycine + 5,10-Methylene-THF ⇌ Serine + THF | THF依赖型双向反应 |
   
 
 # 酶动力学方程（米氏-门滕模型）
@@ -73,16 +74,17 @@ y=[F, THF, F10, MH4F, mTHF, Gly, Ser, NH_3]
 
 微分方程组（时间导数）
 
-变量 含义 导数方程
-[F] 甲酸 < img src="https://latex.codecogs.com/svg.image?\frac{d[F]}{dt}=-v_1&space;" alt="Equation 1" /> 
-[THF] 四氢叶酸 < img src="https://latex.codecogs.com/svg.image?\frac{d[THF]}{dt}=-v_1&plus;v_4&plus;v_5&space;" alt="Equation 1" />
-[F10] 10-甲酰-THF < img src="https://latex.codecogs.com/svg.image?&space;&space;\frac{d[F10]}{dt}=v_1-v_2&space;" alt="Equation 1" />
-[MH4F] 5,10-亚甲基-THF < img src="https://latex.codecogs.com/svg.image?&space;&space;\frac{d[MH4F]}{dt}=v_2-v_3&space;" alt="Equation 1" />
-[mTHF] 5,10-次甲基-THF < img src="https://latex.codecogs.com/svg.image?&space;&space;\frac{d[mTHF]}{dt}=v_3-v_4-v_5&space;" alt="Equation 1" />
-[Gly] 甘氨酸 < img src="https://latex.codecogs.com/svg.image?&space;&space;\frac{d[Gly]}{dt}=v_4-v_5&space;" alt="Equation 1" />
-[Ser] 丝氨酸 < img src="https://latex.codecogs.com/svg.image?&space;&space;\frac{d[Ser]}{dt}=v_5&space;" alt="Equation 1" />
-[NH_3] 氨 < img src="https://latex.codecogs.com/svg.image?&space;&space;\frac{d[NH_3]}{dt}=-v_4&space;" alt="Equation 1" />
-  
+| 变量 | 含义 | 导数方程 |
+|:---:|:---:|:---:|
+| `[F]` | 甲酸 | ![](https://latex.codecogs.com/svg.image?\frac{d[F]}{dt}=-v_1) |
+| `[THF]` | 四氢叶酸 | ![](https://latex.codecogs.com/svg.image?\frac{d[THF]}{dt}=-v_1+v_4+v_5) |
+| `[F10]` | 10-甲酰-THF | ![](https://latex.codecogs.com/svg.image?\frac{d[F10]}{dt}=v_1-v_2) |
+| `[MH4F]` | 5,10-亚甲基-THF | ![](https://latex.codecogs.com/svg.image?\frac{d[MH4F]}{dt}=v_2-v_3) |
+| `[mTHF]` | 5,10-次甲基-THF | ![](https://latex.codecogs.com/svg.image?\frac{d[mTHF]}{dt}=v_3-v_4-v_5) |
+| `[Gly]` | 甘氨酸 | ![](https://latex.codecogs.com/svg.image?\frac{d[Gly]}{dt}=v_4-v_5) |
+| `[Ser]` | 丝氨酸 | ![](https://latex.codecogs.com/svg.image?\frac{d[Ser]}{dt}=v_5) |
+| `[NH_3]` | 氨 | ![](https://latex.codecogs.com/svg.image?\frac{d[NH_3]}{dt}=-v_4) |
+
 
 # 求解器配置
 
