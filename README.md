@@ -1,5 +1,5 @@
 # FDGB-Sim
-Formate-Driven Glycine Biosynthesis Simulator
+Formate-Driven Glycine Biosynthesis Simulator | 甲酸驱动甘氨酸生物合成仿真模拟系统
 
 
 # 项目简介
