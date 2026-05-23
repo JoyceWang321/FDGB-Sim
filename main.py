@@ -2,9 +2,10 @@ import streamlit as st
 import numpy as np
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
+import time
 
-st.set_page_config(layout="wide", page_title="Stable Glycine Model")
-st.sidebar.header("🔬 Stable Parameters")
+st.set_page_config(layout="wide", page_title="Glycine Metabolism Model")
+st.sidebar.header("🔬 Metabolic Parameters")
 
 # ============================================================================
 # 1. DEFAULT VALUES
@@ -13,7 +14,7 @@ DEFAULT_VMAX = {
     "FtfL": 1.6,
     "Fch": 1.9,
     "MtdA": 6.8,
-    "GCS": 0.10,
+    "GCS": 0.2,
     "SHMT": 15.0
 }
 
@@ -21,20 +22,14 @@ DEFAULT_KM = {
     "FtfL_F": 22.0, "FtfL_THF": 0.8, "FtfL_ATP": 0.021,
     "Fch_F10": 0.08, "Fch_MH4F": 0.08,
     "MtdA_MH4F": 0.03, "MtdA_NADPH": 0.01, "MtdA_mTHF": 0.03, "MtdA_NADP": 0.01,
-    "GCS_mTHF": 0.0677, "GCS_NH3": 65.4, "GCS_HCO3": 3.4, "GCS_NADH": 0.02, "GCS_Gly_inh": 0.1,
+    "GCS_mTHF": 0.0677, "GCS_NH3": 65.4, "GCS_HCO3": 3.4, "GCS_NADH": 0.02,
+    "GCS_Gly_inh": 0.1, "GCS_Gly_rev": 5.0, "GCS_THF_rev": 0.2,
     "SHMT_Gly": 5.0, "SHMT_mTHF": 0.05, "SHMT_Ser": 3.0, "SHMT_THF": 0.2
 }
 
 DEFAULT_INIT = {
-    "Formate": 50.0,
-    "THF": 1.0,
-    "Glycine": 0.0,
-    "Serine": 5.0,
-    "Ammonia": 100.0,
-    "HCO3": 50.0,
-    "ATP": 5.0,
-    "NADPH": 1.0,
-    "NADH": 0.5
+    "Formate": 50.0, "THF": 1.0, "Glycine": 0.0, "Serine": 5.0,
+    "Ammonia": 100.0, "HCO3": 50.0, "ATP": 5.0, "NADPH": 1.0, "NADH": 0.5
 }
 
 # ============================================================================
@@ -51,11 +46,11 @@ if st.sidebar.button("🔄 Reset to Defaults"):
 # 3. VMAX INPUTS
 # ============================================================================
 st.sidebar.subheader("Vmax (mM/min)")
-vmax_ftfl = st.sidebar.number_input("FtfL", 0.1, 10.0, DEFAULT_VMAX["FtfL"], 0.1, key="vmax_ftfl")
-vmax_fch = st.sidebar.number_input("Fch", 0.1, 10.0, DEFAULT_VMAX["Fch"], 0.1, key="vmax_fch")
-vmax_mtda = st.sidebar.number_input("MtdA", 0.1, 20.0, DEFAULT_VMAX["MtdA"], 0.1, key="vmax_mtda")
-vmax_gcs = st.sidebar.number_input("GCS", 0.001, 1.0, DEFAULT_VMAX["GCS"], 0.001, key="vmax_gcs")
-vmax_shmt = st.sidebar.number_input("SHMT", 0.1, 50.0, DEFAULT_VMAX["SHMT"], 0.1, key="vmax_shmt")
+vmax_ftfl = st.sidebar.number_input("FtfL", 0.01, 10.0, DEFAULT_VMAX["FtfL"], 0.01, key="vmax_ftfl")
+vmax_fch = st.sidebar.number_input("Fch", 0.01, 10.0, DEFAULT_VMAX["Fch"], 0.01, key="vmax_fch")
+vmax_mtda = st.sidebar.number_input("MtdA", 0.01, 20.0, DEFAULT_VMAX["MtdA"], 0.01, key="vmax_mtda")
+vmax_gcs = st.sidebar.number_input("GCS", 0.01, 10.0, DEFAULT_VMAX["GCS"], 0.01, key="vmax_gcs")
+vmax_shmt = st.sidebar.number_input("SHMT", 0.01, 50.0, DEFAULT_VMAX["SHMT"], 0.01, key="vmax_shmt")
 
 # ============================================================================
 # 4. INITIAL CONCENTRATIONS
@@ -79,11 +74,13 @@ Km_Fch = {"F10": DEFAULT_KM["Fch_F10"], "MH4F": DEFAULT_KM["Fch_MH4F"]}
 Km_MtdA = {"MH4F": DEFAULT_KM["MtdA_MH4F"], "NADPH": DEFAULT_KM["MtdA_NADPH"], 
            "mTHF": DEFAULT_KM["MtdA_mTHF"], "NADP": DEFAULT_KM["MtdA_NADP"]}
 Km_GCS = {"mTHF": DEFAULT_KM["GCS_mTHF"], "NH3": DEFAULT_KM["GCS_NH3"], 
-          "HCO3": DEFAULT_KM["GCS_HCO3"], "NADH": DEFAULT_KM["GCS_NADH"]}
+          "HCO3": DEFAULT_KM["GCS_HCO3"], "NADH": DEFAULT_KM["GCS_NADH"],
+          "GCS_Gly_inh": DEFAULT_KM["GCS_Gly_inh"],
+          "GCS_Gly_rev": DEFAULT_KM["GCS_Gly_rev"],
+          "GCS_THF_rev": DEFAULT_KM["GCS_THF_rev"]}
 Km_SHMT = {"Gly": DEFAULT_KM["SHMT_Gly"], "mTHF": DEFAULT_KM["SHMT_mTHF"], 
            "Ser": DEFAULT_KM["SHMT_Ser"], "THF": DEFAULT_KM["SHMT_THF"]}
 Keq_shmt = 1.2
-Ki_gly_gcs = DEFAULT_KM["GCS_Gly_inh"]
 
 # ============================================================================
 # 6. RATE EQUATIONS
@@ -101,38 +98,44 @@ def rate_ftfl(F, THF, ATP):
     return safe_divide(num, den)
 
 def rate_fch(F10, MH4F):
-    if F10 < 1e-8 and MH4F < 1e-8:
+    if F10 < 1e-8:
         return 0
     p = Km_Fch
-    v_rev = vmax_fch / 0.54
-    num = (vmax_fch * F10 / p["F10"]) - (v_rev * MH4F / p["MH4F"])
+    num = vmax_fch * F10 / p["F10"]
     den = 1 + F10/p["F10"] + MH4F/p["MH4F"]
     return safe_divide(num, den)
 
 def rate_mtda(MH4F, NADPH, mTHF, NADP):
-    if MH4F < 1e-8 and mTHF < 1e-8:
+    if MH4F < 1e-8:
         return 0
     p = Km_MtdA
-    v_rev = vmax_mtda / 4.0
-    num = (vmax_mtda * MH4F * NADPH / (p["MH4F"]*p["NADPH"])) - \
-          (v_rev * mTHF * NADP / (p["mTHF"]*p["NADP"]))
+    num = vmax_mtda * MH4F * NADPH / (p["MH4F"]*p["NADPH"])
     den = (1 + MH4F/p["MH4F"] + NADPH/p["NADPH"] +
            mTHF/p["mTHF"] + NADP/p["NADP"] +
            MH4F*NADPH/(p["MH4F"]*p["NADPH"]))
     return safe_divide(num, den)
 
-def rate_gcs(mTHF, NH3, NADH, HCO3, Gly):
-    if mTHF < 1e-8 or NH3 < 1e-8 or HCO3 < 1e-8 or NADH < 1e-8:
+def rate_gcs(mTHF, NH3, NADH, HCO3, Gly, THF):
+    if any(c < 1e-8 for c in [mTHF, NH3, HCO3, NADH, Gly, THF]):
         return 0
+    
     p = Km_GCS
-    inhibition = 1 / (1 + Gly/Ki_gly_gcs)
-    base_rate = vmax_gcs * (
-        mTHF / (p["mTHF"] + mTHF) *
-        NH3 / (p["NH3"] + NH3) *
-        HCO3 / (p["HCO3"] + HCO3) *
-        NADH / (p["NADH"] + NADH)
+    
+    # 正向（合成）
+    v_fwd = vmax_gcs * (
+        mTHF/(p["mTHF"]+mTHF) *
+        NH3/(p["NH3"]+NH3) *
+        HCO3/(p["HCO3"]+HCO3) *
+        NADH/(p["NADH"]+NADH)
+    ) * (1/(1+Gly/p["GCS_Gly_inh"]))
+    
+    # 逆向（裂解）- 进一步降低逆向强度
+    v_rev = vmax_gcs * 0.02 * (  # 从 0.05 降到 0.02
+        Gly/(p["GCS_Gly_rev"]+Gly) *
+        THF/(p["GCS_THF_rev"]+THF)
     )
-    return base_rate * inhibition
+    
+    return safe_divide(v_fwd - v_rev, 1)
 
 def rate_shmt(Gly, mTHF, Ser, THF):
     if Gly < 1e-8 and Ser < 1e-8:
@@ -155,12 +158,10 @@ def rate_shmt(Gly, mTHF, Ser, THF):
     return safe_divide(v_fwd - v_rev, den)
 
 # ============================================================================
-# 7. ODE SYSTEM (WITH NON-NEGATIVITY ENFORCEMENT)
+# 7. ODE SYSTEM
 # ============================================================================
 def system(t, y):
-    # 强制所有浓度非负
     y = np.maximum(y, 0)
-    
     F, THF, F10, MH4F, mTHF, Gly, Ser, NH3 = y
     
     ATP = init_atp
@@ -169,10 +170,15 @@ def system(t, y):
     NADP = 0.05
     HCO3 = init_hco3
     
-    v1 = rate_ftfl(F, THF, ATP)
+    # THF 保护：过低时暂停 FtfL
+    if THF < 0.005:
+        v1 = 0
+    else:
+        v1 = rate_ftfl(F, THF, ATP)
+    
     v2 = rate_fch(F10, MH4F)
     v3 = rate_mtda(MH4F, NADPH, mTHF, NADP)
-    v4 = rate_gcs(mTHF, NH3, NADH, HCO3, Gly)
+    v4 = rate_gcs(mTHF, NH3, NADH, HCO3, Gly, THF)
     v5 = rate_shmt(Gly, mTHF, Ser, THF)
     
     dF = -v1
@@ -190,41 +196,49 @@ def system(t, y):
 # 8. SIMULATION SETTINGS
 # ============================================================================
 st.sidebar.subheader("Simulation Settings")
-sim_minutes = st.sidebar.slider("Simulation Time (minutes)", 1, 180, 120)  # 扩展到180分钟
+sim_minutes = st.sidebar.slider("Simulation Time (minutes)", 1, 180, 120)
 
-if st.sidebar.button("🚀 Run Stable Simulation", type="primary"):
-    y0 = [init_formate, init_thf, 1e-6, 1e-6, 1e-6, init_gly, init_ser, init_nh3]
+if st.sidebar.button("🚀 Run Simulation", type="primary"):
+    start_time = time.time()
+    
+    # 根据 GCS Vmax 动态调整 mTHF 初始浓度
+    mthf_init = max(0.5, vmax_gcs * 20)  # 关键：GCS 越高，mTHF 初始越多
+    y0 = [init_formate, init_thf, 1e-6, 1e-6, mthf_init, init_gly, init_ser, init_nh3]
+    
     t_end = sim_minutes * 60
-    t_eval = np.linspace(0, t_end, 3000)  # 增加采样点
+    t_eval = np.linspace(0, t_end, 3000)
     
     try:
-        with st.spinner(f'Simulating {sim_minutes} minutes...'):
+        with st.spinner(f'Simulating {sim_minutes} minutes (GCS Vmax={vmax_gcs})...'):
             sol = solve_ivp(
                 system, 
                 [0, t_end], 
                 y0, 
                 method="LSODA",
                 t_eval=t_eval,
-                rtol=1e-8, 
-                atol=1e-10,
-                max_step=30.0,  # 最大步长30秒
-                first_step=0.001
+                rtol=1e-6,           # 放宽容差
+                atol=1e-8,
+                max_step=5.0,        # 限制最大步长
+                first_step=0.001,
+                max_num_steps=100000 # 限制最大步数，防止无限循环
             )
         
+        elapsed = time.time() - start_time
+        st.write(f"⏱️ 模拟耗时: {elapsed:.2f} 秒")
+        
         if sol.success:
-            st.success(f'✅ Simulation completed successfully! Time: {sol.t[-1]/60:.1f} minutes')
+            st.success(f'✅ Simulation completed! Steps: {sol.nfev}')
             
             t = sol.t / 60
             F, THF, F10, MH4F, mTHF, Gly, Ser, NH3 = sol.y
             
-            # 检查是否有负值
-            min_vals = [np.min(F), np.min(THF), np.min(Gly), np.min(Ser)]
-            if any(val < -1e-6 for val in min_vals):
-                st.warning("⚠️ Negative concentrations detected (numerical artifact)")
+            # 检查是否有问题
+            if np.min(THF) < 0.001:
+                st.warning("⚠️ THF 接近零！建议降低 FtfL 活性或提高 mTHF 初始值。")
+            if np.any(np.isnan(sol.y)):
+                st.error("❌ 检测到 NaN 值！数值不稳定。")
             
-            # ========================================================================
-            # 9. PLOTS
-            # ========================================================================
+            # 绘图
             fig, axes = plt.subplots(2, 2, figsize=(14, 10))
             
             axes[0,0].plot(t, F, 'g-', lw=2, label='Formate')
@@ -232,7 +246,7 @@ if st.sidebar.button("🚀 Run Stable Simulation", type="primary"):
             axes[0,0].plot(t, Ser, 'b-', lw=2, label='Serine')
             axes[0,0].set_xlabel('Time (min)')
             axes[0,0].set_ylabel('Concentration (mM)')
-            axes[0,0].set_title(f'Stable Simulation ({sim_minutes} min)')
+            axes[0,0].set_title(f'Glycine Metabolism (GCS Vmax={vmax_gcs})')
             axes[0,0].legend()
             axes[0,0].grid(True, alpha=0.3)
             
@@ -242,7 +256,7 @@ if st.sidebar.button("🚀 Run Stable Simulation", type="primary"):
             axes[0,1].plot(t, MH4F, 'y-', lw=2, label='5,10-M-THF')
             axes[0,1].set_xlabel('Time (min)')
             axes[0,1].set_ylabel('Concentration (mM)')
-            axes[0,1].set_title('Folate Cycle (Stable)')
+            axes[0,1].set_title('Folate Cycle')
             axes[0,1].legend()
             axes[0,1].grid(True, alpha=0.3)
             
@@ -265,36 +279,21 @@ if st.sidebar.button("🚀 Run Stable Simulation", type="primary"):
             plt.tight_layout()
             st.pyplot(fig)
             
-            # ========================================================================
-            # 10. METRICS
-            # ========================================================================
-            st.subheader("📊 Stable Results")
+            # 结果显示
+            st.subheader("📊 Results")
             col1, col2, col3, col4 = st.columns(4)
-            
-            final_gly = Gly[-1]
-            final_ser = Ser[-1]
-            formate_used = F[0] - F[-1]
-            
-            col1.metric("Final Glycine", f"{final_gly:.4f} mM")
-            col2.metric("Final Serine", f"{final_ser:.4f} mM")
-            col3.metric("Formate Used", f"{formate_used:.2f} mM")
-            col4.metric("GCS Vmax", f"{vmax_gcs:.3f} mM/min")
-            
-            # 稳定性检查
-            st.subheader("🔍 Stability Check")
-            if sol.nfev > 10000:
-                st.info(f"Integration required {sol.nfev} function evaluations")
-            if len(sol.t) < 100:
-                st.warning("Few time steps - possible stiffness issues")
-            else:
-                st.success("Integration stable")
+            col1.metric("Final Glycine", f"{Gly[-1]:.4f} mM")
+            col2.metric("Final Serine", f"{Ser[-1]:.4f} mM")
+            col3.metric("Min THF", f"{np.min(THF):.6f} mM")
+            col4.metric("Steps", f"{sol.nfev}")
                 
         else:
             st.error(f"❌ Simulation failed: {sol.message}")
+            st.info("建议：降低 GCS Vmax 或增加 mTHF 初始浓度")
             
     except Exception as e:
-        st.error(f"❌ Error during simulation: {str(e)}")
-        st.info("Try reducing simulation time or adjusting parameters.")
+        st.error(f"❌ Error: {str(e)}")
+        st.info("建议：降低 GCS Vmax 到 0.05 以下")
 
 else:
-    st.info("Adjust parameters and click 'Run Stable Simulation'.")
+    st.info("Adjust parameters and click 'Run Simulation'.")
