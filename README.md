@@ -36,23 +36,23 @@ Formate-Driven Glycine Biosynthesis Simulator
 
 ## 1. FtfL（三元不可逆反应）
 
-![FtfL 反应](./eq1.svg)
+![FtfL 反应](./img/eq1.svg)
 
 ## 2. Fch（不可逆）
 
-![Fch 反应](./eq2.svg)
+![Fch 反应](./img/eq2.svg)
 
 ## 3. MtdA（不可逆）
 
-![Mtda 反应](./eq3.svg)
+![Mtda 反应](./img/eq3.svg)
 
 ## 4. GCS（主正向+弱逆向+产物抑制）
 
-![GCS 反应](./eq4.svg)
+![GCS 反应](./img/eq4.svg)
 
 ## 5. SHMT（THF依赖型可逆反应）
 
-![SHMT 反应](./eq5.svg)
+![SHMT 反应](./img/eq5.svg)
 
 ## 其中：
 
